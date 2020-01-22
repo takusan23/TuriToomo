@@ -15,7 +15,6 @@ export function main(param: GameMainParameterObject): void {
 	// 市場コンテンツのランキングモードでは、g.game.vars.gameState.score の値をスコアとして扱います
 	g.game.vars.gameState = { score: 0 }
 	scene.loaded.add(() => {
-		// ここからゲーム内容を記述します
 
 		// プレイヤーを生成します
 		const player = new g.Sprite({
@@ -66,18 +65,34 @@ export function main(param: GameMainParameterObject): void {
 		})
 		scene.append(ito)
 
+		// 釣った魚
+		const fishLabel = new g.Label({
+			scene: scene,
+			text: '',
+			fontSize: 20,
+			font: font,
+			width: 100,
+			x: 0.7 * g.game.width,
+			y: 100
+		})
+		scene.append(fishLabel)
+
 		// 押したとき
+		// ここでは釣り糸を垂らして回収するまでをやってる。
 		let isFishing = false
 		scene.pointDownCapture.add(() => {
+			// クリック連打対策
 			if (!isFishing) {
 				isFishing = true
 				ito.update.removeAll()
+				// まず下げる
 				ito.update.add(() => {
 					if (g.game.height >= ito.height + 100) {
 						ito.height += 10
 					}
 					ito.modified()
 				})
+				// 1秒後に引き上げる
 				scene.setTimeout(() => {
 					ito.update.removeAll()
 					ito.update.add(() => {
@@ -87,6 +102,7 @@ export function main(param: GameMainParameterObject): void {
 						ito.modified()
 					})
 				}, 1000)
+				// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
 				scene.setTimeout(() => {
 					ito.update.removeAll()
 					ito.height = 10
@@ -96,6 +112,7 @@ export function main(param: GameMainParameterObject): void {
 			}
 		})
 
+		// 魚？生成。
 		scene.setInterval(() => {
 			if (time >= 0) {
 				scene.setTimeout(() => {
@@ -120,12 +137,22 @@ export function main(param: GameMainParameterObject): void {
 								karaoke.y += upSize
 								karaoke.modified()
 								if (20 >= karaoke.y) {
+
+									fishLabel.text += '\nさかな 10'
+									fishLabel.invalidate()
+
 									upSize = 0
 									karaoke.update.removeAll()
 									karaoke.destroy()
 									g.game.vars.gameState.score += 10
 									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
 									scoreLabel.invalidate()
+
+									scene.setTimeout(() => {
+										fishLabel.text = ''
+										fishLabel.invalidate()
+									}, 500)
+
 								}
 							})
 						}
@@ -133,6 +160,10 @@ export function main(param: GameMainParameterObject): void {
 				}, g.game.random.get(100, 1000))
 			}
 		}, 1000)
+
+		const fishingList = (text: string) => {
+
+		}
 
 		const updateHandler = () => {
 			if (time <= 0) {
