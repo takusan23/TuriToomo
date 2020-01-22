@@ -1,8 +1,10 @@
 import { GameMainParameterObject, RPGAtsumaruWindow } from "./parameterObject"
+import al = require("@akashic-extension/akashic-label")
 
 declare const window: RPGAtsumaruWindow
 
 export function main(param: GameMainParameterObject): void {
+
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
@@ -14,6 +16,7 @@ export function main(param: GameMainParameterObject): void {
 	}
 	// 市場コンテンツのランキングモードでは、g.game.vars.gameState.score の値をスコアとして扱います
 	g.game.vars.gameState = { score: 0 }
+
 	scene.loaded.add(() => {
 
 		// プレイヤーを生成します
@@ -39,7 +42,8 @@ export function main(param: GameMainParameterObject): void {
 			text: "SCORE: 0",
 			font: font,
 			fontSize: font.size / 2,
-			textColor: "black"
+			textColor: "black",
+			x: (g.game.width - 200)
 		})
 		scene.append(scoreLabel)
 
@@ -50,7 +54,7 @@ export function main(param: GameMainParameterObject): void {
 			font: font,
 			fontSize: font.size / 2,
 			textColor: "black",
-			x: 0.7 * g.game.width
+			x: 10
 		})
 		scene.append(timeLabel)
 
@@ -66,14 +70,14 @@ export function main(param: GameMainParameterObject): void {
 		scene.append(ito)
 
 		// 釣った魚
-		const fishLabel = new g.Label({
+		const fishLabel = new al.Label({
 			scene: scene,
-			text: '',
-			fontSize: 20,
+			text: "",
+			fontSize: 15,
 			font: font,
-			width: 100,
-			x: 0.7 * g.game.width,
-			y: 100
+			width: 200,
+			x: scoreLabel.x,
+			y: scoreLabel.y + 20
 		})
 		scene.append(fishLabel)
 
@@ -108,61 +112,90 @@ export function main(param: GameMainParameterObject): void {
 					ito.height = 10
 					ito.modified()
 					isFishing = false
+					// 釣った魚も消す
+					scene.setTimeout(() => {
+						fishLabel.text = ""
+						fishLabel.invalidate()
+					}, 500)
 				}, 2000)
 			}
 		})
 
 		// 魚？生成。
 		scene.setInterval(() => {
-			if (time >= 0) {
-				scene.setTimeout(() => {
-					const karaoke = new g.Sprite({
-						scene: scene,
-						src: scene.assets["karaoke"],
-						width: (scene.assets["karaoke"] as g.ImageAsset).width,
-						height: (scene.assets["karaoke"] as g.ImageAsset).height,
-						x: g.game.width,
-						y: g.game.random.get(150, g.game.height - (scene.assets["karaoke"] as g.ImageAsset).height)
-					})
-					scene.append(karaoke)
-					karaoke.update.add(() => {
-						karaoke.x -= 10
-						karaoke.modified()
-					})
-					karaoke.update.add(() => {
-						if (g.Collision.intersectAreas(karaoke, ito)) {
-							karaoke.update.removeAll()
-							karaoke.update.add(() => {
-								let upSize = -10
-								karaoke.y += upSize
-								karaoke.modified()
-								if (20 >= karaoke.y) {
-
-									fishLabel.text += '\nさかな 10'
-									fishLabel.invalidate()
-
-									upSize = 0
-									karaoke.update.removeAll()
-									karaoke.destroy()
-									g.game.vars.gameState.score += 10
-									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
-									scoreLabel.invalidate()
-
-									scene.setTimeout(() => {
-										fishLabel.text = ''
-										fishLabel.invalidate()
-									}, 500)
-
-								}
-							})
-						}
-					})
-				}, g.game.random.get(100, 1000))
-			}
+			createFish({ path: "karaoke", point: 100, name: "バックレカラオケ" })
 		}, 1000)
 
-		const fishingList = (text: string) => {
+		/**
+		 * 魚を作成する関数。
+		 * 制限時間を過ぎた場合は戻り値はnullになります。
+		 */
+		const createFish = (data: {
 
+			/** @param path 必須 アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
+			path: string,
+
+			/** @param speed 自由 移動速度です。マイナスで頼んだ。省略時-10です */
+			speed?: number,
+
+			/** @param point 必須 釣り上げたときの加点数です。 */
+			point: number
+
+			/** @param  interval 任意 出現間隔です。省略時 100~1000 からランダムです。 */
+			interval?: number
+
+			/** @param  name 必須 魚の名前。釣り上げたときに表示させます。 */
+			name: string
+
+		}): g.Sprite => {
+			// 制限時間
+			if (time <= 0) {
+				return null
+			}
+			// 魚生成
+			const karaoke = new g.Sprite({
+				scene: scene,
+				src: scene.assets[data.path],
+				width: (scene.assets[data.path] as g.ImageAsset).width,
+				height: (scene.assets[data.path] as g.ImageAsset).height,
+				x: g.game.width,
+				y: g.game.random.get(150, g.game.height - (scene.assets[data.path] as g.ImageAsset).height)
+			})
+			scene.setTimeout(() => {
+				// 追加
+				scene.append(karaoke)
+				// 適当に流す
+				karaoke.update.add(() => {
+					karaoke.x -= 10
+					karaoke.modified()
+				})
+				karaoke.update.add(() => {
+					// 当たったとき
+					if (g.Collision.intersectAreas(karaoke, ito)) {
+						// 魚の動きを消す
+						karaoke.update.removeAll()
+						karaoke.update.add(() => {
+							// 上昇
+							let upSize = data.speed ?? -10 // ないとき-10
+							karaoke.y += upSize
+							karaoke.modified()
+							if (20 >= karaoke.y) {
+								// 釣り上げた。魚削除など
+								fishLabel.text += `${data.name} +${data.point}\n`
+								fishLabel.invalidate()
+								upSize = 0
+								karaoke.update.removeAll()
+								karaoke.destroy()
+								// スコア表示
+								g.game.vars.gameState.score += data.point
+								scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
+								scoreLabel.invalidate()
+							}
+						})
+					}
+				})
+			}, data.interval ?? g.game.random.get(100, 1000))
+			return karaoke
 		}
 
 		const updateHandler = () => {
