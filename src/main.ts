@@ -8,7 +8,7 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "shot", "se", "karaoke"]
+		assetIds: ["toomo", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -123,17 +123,30 @@ export function main(param: GameMainParameterObject): void {
 
 		// 魚？生成。
 		scene.setInterval(() => {
-			createFish({ path: "karaoke", point: 100, name: "バックレカラオケ" })
+			// バックレカラオケ
+			createFish({ asset: "karaoke", point: 100, name: "バックレカラオケ" })
+			// 通知表
+			createFish({ asset: "tuusinbo", name: "通信簿", point: 50 })
+			// レモン
+			createFish({ asset: "inu", name: "レモン", point: 100 })
 		}, 1000)
+		scene.setInterval(() => {
+			// DT
+			createFish({ asset: "doutei_toomo", name: "DT", point: 200 })
+		}, 5000)
+		scene.setInterval(() => {
+			// 学校（唯一の減点要素）
+			createFish({ asset: "irasutoya_kousya", name: "スクーリング", point: -100 })
+		}, 2000)
 
 		/**
 		 * 魚を作成する関数。
-		 * 制限時間を過ぎた場合は戻り値はnullになります。
+		 * 制限時間を過ぎた場合、戻り値はnullになります。
 		 */
 		const createFish = (data: {
 
-			/** @param path 必須 アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
-			path: string,
+			/** @param asset 必須 アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
+			asset: string,
 
 			/** @param speed 自由 移動速度です。マイナスで頼んだ。省略時-10です */
 			speed?: number,
@@ -155,11 +168,11 @@ export function main(param: GameMainParameterObject): void {
 			// 魚生成
 			const karaoke = new g.Sprite({
 				scene: scene,
-				src: scene.assets[data.path],
-				width: (scene.assets[data.path] as g.ImageAsset).width,
-				height: (scene.assets[data.path] as g.ImageAsset).height,
+				src: scene.assets[data.asset],
+				width: (scene.assets[data.asset] as g.ImageAsset).width,
+				height: (scene.assets[data.asset] as g.ImageAsset).height,
 				x: g.game.width,
-				y: g.game.random.get(150, g.game.height - (scene.assets[data.path] as g.ImageAsset).height)
+				y: g.game.random.get(150, g.game.height - (scene.assets[data.asset] as g.ImageAsset).height)
 			})
 			scene.setTimeout(() => {
 				// 追加
@@ -181,7 +194,12 @@ export function main(param: GameMainParameterObject): void {
 							karaoke.modified()
 							if (20 >= karaoke.y) {
 								// 釣り上げた。魚削除など
-								fishLabel.text += `${data.name} +${data.point}\n`
+								if (data.point >= 0) {
+									// 正の数の場合は＋が省略されるので分岐
+									fishLabel.text += `${data.name} +${data.point}\n`
+								} else {
+									fishLabel.text += `${data.name} ${data.point}\n`
+								}
 								fishLabel.invalidate()
 								upSize = 0
 								karaoke.update.removeAll()
@@ -196,6 +214,11 @@ export function main(param: GameMainParameterObject): void {
 				})
 			}, data.interval ?? g.game.random.get(100, 1000))
 			return karaoke
+		}
+
+		/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。 */
+		const random = (min: number, max: number): number => {
+			return g.game.random.get(min, max)
 		}
 
 		const updateHandler = () => {

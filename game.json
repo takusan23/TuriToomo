@@ -4,18 +4,6 @@
 	"fps": 30,
 	"main": "./script/_bootstrap.js",
 	"assets": {
-		"player": {
-			"type": "image",
-			"width": 32,
-			"height": 32,
-			"path": "image/player.png"
-		},
-		"shot": {
-			"type": "image",
-			"width": 16,
-			"height": 16,
-			"path": "image/shot.png"
-		},
 		"se": {
 			"type": "audio",
 			"path": "audio/se",
@@ -48,6 +36,42 @@
 			"width": 100,
 			"height": 90,
 			"path": "image/karaoke.png"
+		},
+		"bakkure_1": {
+			"type": "image",
+			"width": 50,
+			"height": 50,
+			"path": "image/bakkure_1.png"
+		},
+		"doutei_toomo": {
+			"type": "image",
+			"width": 100,
+			"height": 56,
+			"path": "image/doutei_toomo.png"
+		},
+		"inu": {
+			"type": "image",
+			"width": 100,
+			"height": 83,
+			"path": "image/inu.png"
+		},
+		"irasutoya_kousya": {
+			"type": "image",
+			"width": 140,
+			"height": 86,
+			"path": "image/irasutoya_kousya.png"
+		},
+		"karaoke_2": {
+			"type": "image",
+			"width": 100,
+			"height": 72,
+			"path": "image/karaoke_2.png"
+		},
+		"tuusinbo": {
+			"type": "image",
+			"width": 100,
+			"height": 56,
+			"path": "image/tuusinbo.png"
 		}
 	},
 	"environment": {
