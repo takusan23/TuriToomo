@@ -17,6 +17,11 @@ export function main(param: GameMainParameterObject): void {
 	// 市場コンテンツのランキングモードでは、g.game.vars.gameState.score の値をスコアとして扱います
 	g.game.vars.gameState = { score: 0 }
 
+	/** @param fishLevel 一度に釣れる量。 */
+	let fishLevel = 2
+	// 釣れたかず
+	let nowFishCount = 0
+
 	scene.loaded.add(() => {
 
 		// プレイヤーを生成します
@@ -107,6 +112,7 @@ export function main(param: GameMainParameterObject): void {
 					})
 				}, 1000)
 				// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
+				// 引き上げたときに何かしたい場合はここに書いてね。
 				scene.setTimeout(() => {
 					ito.update.removeAll()
 					ito.height = 10
@@ -117,6 +123,13 @@ export function main(param: GameMainParameterObject): void {
 						fishLabel.text = ""
 						fishLabel.invalidate()
 					}, 500)
+					// いっぱいまで釣ったら釣れる数を増やす
+					// ただし5個まで。
+					if (nowFishCount === fishLevel && fishLevel < 5) {
+						fishLevel++
+					}
+					// 釣った数を戻す
+					nowFishCount = 0
 				}, 2000)
 			}
 		})
@@ -185,31 +198,35 @@ export function main(param: GameMainParameterObject): void {
 				karaoke.update.add(() => {
 					// 当たったとき
 					if (g.Collision.intersectAreas(karaoke, ito)) {
-						// 魚の動きを消す
-						karaoke.update.removeAll()
-						karaoke.update.add(() => {
-							// 上昇
-							let upSize = data.speed ?? -10 // ないとき-10
-							karaoke.y += upSize
-							karaoke.modified()
-							if (20 >= karaoke.y) {
-								// 釣り上げた。魚削除など
-								if (data.point >= 0) {
-									// 正の数の場合は＋が省略されるので分岐
-									fishLabel.text += `${data.name} +${data.point}\n`
-								} else {
-									fishLabel.text += `${data.name} ${data.point}\n`
+						if (nowFishCount < fishLevel) {
+							// 魚の動きを消す
+							karaoke.update.removeAll()
+							// 釣れた数を増やす
+							nowFishCount++
+							karaoke.update.add(() => {
+								// 上昇
+								let upSize = data.speed ?? -10 // ないとき-10
+								karaoke.y += upSize
+								karaoke.modified()
+								if (20 >= karaoke.y) {
+									// 釣り上げた。魚削除など
+									if (data.point >= 0) {
+										// 正の数の場合は＋が省略されるので分岐
+										fishLabel.text += `${data.name} +${data.point}\n`
+									} else {
+										fishLabel.text += `${data.name} ${data.point}\n`
+									}
+									fishLabel.invalidate()
+									upSize = 0
+									karaoke.update.removeAll()
+									karaoke.destroy()
+									// スコア表示
+									g.game.vars.gameState.score += data.point
+									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
+									scoreLabel.invalidate()
 								}
-								fishLabel.invalidate()
-								upSize = 0
-								karaoke.update.removeAll()
-								karaoke.destroy()
-								// スコア表示
-								g.game.vars.gameState.score += data.point
-								scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
-								scoreLabel.invalidate()
-							}
-						})
+							})
+						}
 					}
 				})
 			}, data.interval ?? g.game.random.get(100, 1000))
