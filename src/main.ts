@@ -165,9 +165,9 @@ export function main(param: GameMainParameterObject): void {
 		scene.setInterval(() => {
 			// バックレカラオケ
 			createFish({ asset: "karaoke", point: 100, name: "バックレカラオケ" })
-			// 通知表
+			//	// 通知表
 			createFish({ asset: "tuusinbo", name: "通信簿", point: 50 })
-			// レモン
+			//	// レモン
 			createFish({ asset: "inu", name: "レモン", point: 100 })
 		}, 1000)
 		scene.setInterval(() => {
@@ -175,7 +175,7 @@ export function main(param: GameMainParameterObject): void {
 			createFish({ asset: "doutei_toomo", name: "DT", point: 200 })
 		}, 5000)
 		scene.setInterval(() => {
-			// 学校（唯一の減点要素）
+			//	// 学校（唯一の減点要素）
 			createFish({ asset: "irasutoya_kousya", name: "スクーリング", point: -100 })
 		}, 2000)
 
@@ -200,26 +200,26 @@ export function main(param: GameMainParameterObject): void {
 			/** @param  name 必須 魚の名前。釣り上げたときに表示させます。 */
 			name: string
 
-		}): g.Sprite => {
+		}): void => {
 			// 制限時間
 			if (time <= 0) {
 				return null
 			}
-			// 魚生成
-			const karaoke = new g.Sprite({
-				scene: scene,
-				src: scene.assets[data.asset],
-				width: (scene.assets[data.asset] as g.ImageAsset).width,
-				height: (scene.assets[data.asset] as g.ImageAsset).height,
-				x: g.game.width,
-				y: g.game.random.get(150, g.game.height - (scene.assets[data.asset] as g.ImageAsset).height)
-			})
 			scene.setTimeout(() => {
+				// 魚生成
+				const karaoke = new g.Sprite({
+					scene: scene,
+					src: scene.assets[data.asset],
+					width: (scene.assets[data.asset] as g.ImageAsset).width,
+					height: (scene.assets[data.asset] as g.ImageAsset).height,
+					x: g.game.width,
+					y: g.game.random.get(150, g.game.height - (scene.assets[data.asset] as g.ImageAsset).height)
+				})
 				// 追加
 				scene.append(karaoke)
 				// 適当に流す
 				karaoke.update.add(() => {
-					karaoke.x -= 10
+					karaoke.x += data.speed ?? -10
 					karaoke.modified()
 				})
 				karaoke.update.add(() => {
@@ -232,8 +232,19 @@ export function main(param: GameMainParameterObject): void {
 							nowFishCount++
 							karaoke.update.add(() => {
 								// 上昇
-								let upSize = data.speed ?? -10 // ないとき-10
-								karaoke.y += upSize
+								karaoke.y = ito.height - 40
+								// 釣り針に引っかかった感じにするため重ねる。
+								// 何故か同時に釣り上げたとき向きが同じになってしまうのでtagに位置を入れてない場合のみ位置を入れるように。
+								if (karaoke.tag === undefined || karaoke.tag === null) {
+									if (nowFishCount % 2 === 1) {
+										karaoke.x = ito.x + karaoke.width - 70
+										karaoke.angle = 20
+									} else {
+										karaoke.x = ito.x - karaoke.width + 20
+										karaoke.angle = 340
+									}
+									karaoke.tag = karaoke.x
+								}
 								karaoke.modified()
 								if (20 >= karaoke.y) {
 									// 釣り上げた。魚削除など
@@ -244,7 +255,6 @@ export function main(param: GameMainParameterObject): void {
 										fishLabel.text += `${data.name} ${data.point}\n`
 									}
 									fishLabel.invalidate()
-									upSize = 0
 									karaoke.update.removeAll()
 									karaoke.destroy()
 									// スコア表示
@@ -257,7 +267,6 @@ export function main(param: GameMainParameterObject): void {
 					}
 				})
 			}, data.interval ?? g.game.random.get(100, 1000))
-			return karaoke
 		}
 
 		/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。 */
