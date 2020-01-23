@@ -72,6 +72,30 @@
 			"width": 100,
 			"height": 56,
 			"path": "image/tuusinbo.png"
+		},
+		"turi_2_ryunen": {
+			"type": "image",
+			"width": 40,
+			"height": 230,
+			"path": "image/turi_2_ryunen.png"
+		},
+		"turi_3_ryunen": {
+			"type": "image",
+			"width": 40,
+			"height": 230,
+			"path": "image/turi_3_ryunen.png"
+		},
+		"turi_4_ryunen": {
+			"type": "image",
+			"width": 40,
+			"height": 230,
+			"path": "image/turi_4_ryunen.png"
+		},
+		"turi_5_ryunen": {
+			"type": "image",
+			"width": 40,
+			"height": 230,
+			"path": "image/turi_5_ryunen.png"
 		}
 	},
 	"environment": {

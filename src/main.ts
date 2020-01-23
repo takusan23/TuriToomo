@@ -1,4 +1,5 @@
 import { GameMainParameterObject, RPGAtsumaruWindow } from "./parameterObject"
+// 複数行表示に対応したやつ
 import al = require("@akashic-extension/akashic-label")
 
 declare const window: RPGAtsumaruWindow
@@ -8,7 +9,7 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
+		assetIds: ["toomo", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -63,17 +64,6 @@ export function main(param: GameMainParameterObject): void {
 		})
 		scene.append(timeLabel)
 
-		// 釣り糸
-		const ito = new g.FilledRect({
-			scene: scene,
-			cssColor: "blue",
-			width: 10,
-			height: 10,
-			x: player.x + 100,
-			y: player.y + 20
-		})
-		scene.append(ito)
-
 		// 釣った魚
 		const fishLabel = new al.Label({
 			scene: scene,
@@ -85,6 +75,23 @@ export function main(param: GameMainParameterObject): void {
 			y: scoreLabel.y + 20
 		})
 		scene.append(fishLabel)
+
+		// 釣り糸
+		let ito = new g.Sprite({
+			scene: scene,
+			src: scene.assets["turi_2_ryunen"],
+			width: 40,
+			height: (scene.assets["turi_2_ryunen"] as g.ImageAsset).height,
+			x: player.x + 100,
+			y: player.y + 20
+		})
+		scene.append(ito)
+
+		// とりあえず非表示？
+		// 画像の高さ変更の場合は modified() + invalidate() を呼び出す必要がある模様。
+		ito.height = 0
+		ito.modified()
+		ito.invalidate()
 
 		// 押したとき
 		// ここでは釣り糸を垂らして回収するまでをやってる。
@@ -100,33 +107,53 @@ export function main(param: GameMainParameterObject): void {
 						ito.height += 10
 					}
 					ito.modified()
+					ito.invalidate()
 				})
 				// 1秒後に引き上げる
 				scene.setTimeout(() => {
 					ito.update.removeAll()
 					ito.update.add(() => {
-						if (20 <= ito.height) {
+						if (0 <= ito.height) {
 							ito.height -= 10
 						}
 						ito.modified()
+						ito.invalidate()
 					})
 				}, 1000)
 				// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
 				// 引き上げたときに何かしたい場合はここに書いてね。
 				scene.setTimeout(() => {
 					ito.update.removeAll()
-					ito.height = 10
+					ito.height = 0
 					ito.modified()
+					ito.invalidate()
 					isFishing = false
 					// 釣った魚も消す
 					scene.setTimeout(() => {
 						fishLabel.text = ""
 						fishLabel.invalidate()
 					}, 500)
-					// いっぱいまで釣ったら釣れる数を増やす
+					// いっぱいまで釣ったら釣れる数を増やす (釣れる数3で同時に3匹釣ったら→釣れる数を1足す)
 					// ただし5個まで。
 					if (nowFishCount === fishLevel && fishLevel < 5) {
 						fishLevel++
+						// 釣り針増やした画像に変えたい
+						scene.remove(ito)
+						// んだけど多分生成したSpriteのsrcを変えることはできないので作り直すしかないと思われ
+						ito = new g.Sprite({
+							scene: scene,
+							src: scene.assets[`turi_${fishLevel}_ryunen`],
+							width: 40,
+							height: (scene.assets[`turi_${fishLevel}_ryunen`] as g.ImageAsset).height,
+							x: player.x + 100,
+							y: player.y + 20
+						})
+						scene.append(ito)
+						// とりあえず非表示？
+						// 画像の高さ変更の場合は modified() + invalidate() を呼び出す必要がある模様。
+						ito.height = 0
+						ito.modified()
+						ito.invalidate()
 					}
 					// 釣った数を戻す
 					nowFishCount = 0

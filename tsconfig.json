@@ -7,7 +7,7 @@
     "noImplicitAny": true,
     "module": "commonjs",
     "outDir": "./script",
-    "types": [ ]
+    "types": []
   },
   "files": [
     "node_modules/@akashic/akashic-engine/lib/main.d.ts"
