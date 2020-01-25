@@ -217,43 +217,47 @@ export function main(param: GameMainParameterObject): void {
 		}
 
 		scene.pointDownCapture.add(() => {
-			fishList.forEach(fish => {
-				turibariList.forEach(hari => {
-					// まだ釣り上げていない場合
-					// 魚のtagにつけるオブジェクトに釣り上げたかどうかあるのでそれを使う。
-					if (!(fish.tag as FishTag).isFished) {
-						// 当たり判定。
-						if (g.Collision.intersectAreas(fish, hari)) {
-							// 釣り上げた判定に使う。
-							(fish.tag as FishTag).isFished = true
-							const data = (fish.tag as FishTag)
-							// 魚の動きを消す
-							fish.update.removeAll()
-							// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
-							nowFishCount++
-							fish.update.add(() => {
-								// 釣り上げる～
-								fish.y += -10
-								fish.modified()
-								if (20 >= fish.y) {
-									// 釣り上げた。魚削除など
-									if (data.point >= 0) {
-										// 正の数の場合は＋が省略されるので分岐
-										fishLabel.text += `${data.name} +${data.point}\n`
-									} else {
-										fishLabel.text += `${data.name} ${data.point}\n`
+			scene.update.add(() => {
+				fishList.forEach(fish => {
+					turibariList.forEach(hari => {
+						// まだ釣り上げていない場合
+						// 魚のtagにつけるオブジェクトに釣り上げたかどうかあるのでそれを使う。
+						// それと引き上げたときのみ動くように
+						// a
+						if (!(fish.tag as FishTag).isFished && isMoveTop && (nowFishCount < fishLevel)) {
+							// 当たり判定。
+							if (g.Collision.intersectAreas(fish, hari)) {
+								// 釣り上げた判定に使う。
+								(fish.tag as FishTag).isFished = true
+								const data = (fish.tag as FishTag)
+								// 魚の動きを消す
+								fish.update.removeAll()
+								// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
+								nowFishCount++
+								fish.update.add(() => {
+									// 釣り上げる～
+									fish.y += -10
+									fish.modified()
+									if (20 >= fish.y) {
+										// 釣り上げた。魚削除など
+										if (data.point >= 0) {
+											// 正の数の場合は＋が省略されるので分岐
+											fishLabel.text += `${data.name} +${data.point}\n`
+										} else {
+											fishLabel.text += `${data.name} ${data.point}\n`
+										}
+										fishLabel.invalidate()
+										fish.update.removeAll()
+										fish.destroy()
+										// スコア表示
+										g.game.vars.gameState.score += data.point
+										scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
+										scoreLabel.invalidate()
 									}
-									fishLabel.invalidate()
-									fish.update.removeAll()
-									fish.destroy()
-									// スコア表示
-									g.game.vars.gameState.score += data.point
-									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
-									scoreLabel.invalidate()
-								}
-							})
+								})
+							}
 						}
-					}
+					})
 				})
 			})
 		})
