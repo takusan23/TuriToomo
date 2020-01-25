@@ -99,9 +99,15 @@
 		},
 		"hari": {
 			"type": "image",
-			"width": 40,
-			"height": 40,
+			"width": 30,
+			"height": 30,
 			"path": "image/hari.png"
+		},
+		"hari_hanten": {
+			"type": "image",
+			"width": 30,
+			"height": 30,
+			"path": "image/hari_hanten.png"
 		}
 	},
 	"environment": {

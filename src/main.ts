@@ -9,7 +9,7 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "hari", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
+		assetIds: ["toomo", "hari", "hari_hanten", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -20,8 +20,10 @@ export function main(param: GameMainParameterObject): void {
 
 	/** @param fishLevel 一度に釣れる量。 */
 	let fishLevel = 2
-	// 釣れたかず
+	/** @param nowFishCount 釣れたかず */
 	let nowFishCount = 0
+	/** @param turibariList 釣り針の画像の配列 */
+	const turibariList: g.Sprite[] = []
 
 	scene.loaded.add(() => {
 
@@ -87,13 +89,37 @@ export function main(param: GameMainParameterObject): void {
 		})
 		scene.append(ito)
 
-		const hari = new g.Sprite({
-			scene: scene,
-			src: scene.assets["hari"],
-			x: ito.x,
-			y: ito.height + 50
-		})
-		scene.append(hari)
+		/**
+		 *  釣り針を増やす（足す）関数 。生成した画像は勝手に配列に入れておきますね。
+		 */
+		const createHari = () => {
+			// 高さ。
+			const yPos = ito.height + (50 - (turibariList.length * 20))
+			// 針の方向。
+			let assetName = "hari"
+			if (turibariList.length % 2 === 0) {
+				assetName = "hari"
+			} else {
+				assetName = "hari_hanten"
+			}
+			// 横の位置。
+			let xPos = ito.x
+			if (turibariList.length % 2 === 1) {
+				xPos = ito.x - 30 // 画像の幅だけ引いてる。
+			}
+			const hari_ = new g.Sprite({
+				scene: scene,
+				src: scene.assets[assetName],
+				x: xPos,
+				y: yPos
+			})
+			scene.append(hari_)
+			turibariList.push(hari_)
+		}
+
+		// まず２個
+		createHari()
+		createHari()
 
 		// 押したとき
 		// ここでは釣り糸を垂らして回収するまでをやってる。
@@ -113,11 +139,13 @@ export function main(param: GameMainParameterObject): void {
 					isMoveTop = true
 					if (80 <= ito.height) {
 						ito.height -= 10
-						hari.y -= 10
+						turibariList.forEach(hari => {
+							hari.y -= 10
+							hari.modified()
+							hari.invalidate()
+						})
 					}
 					ito.modified()
-					hari.modified()
-					hari.invalidate()
 				})
 
 				// 海に戻す
@@ -127,11 +155,13 @@ export function main(param: GameMainParameterObject): void {
 					ito.update.add(() => {
 						if (g.game.height >= ito.height + 100) {
 							ito.height += 10
-							hari.y += 10
+							turibariList.forEach(hari => {
+								hari.y += 10
+								hari.modified()
+								hari.invalidate()
+							})
 						}
 						ito.modified()
-						hari.modified()
-						hari.invalidate()
 					})
 					isFishing = false
 					// 釣った魚も消す
@@ -143,6 +173,8 @@ export function main(param: GameMainParameterObject): void {
 					// ただし5個まで。
 					if (nowFishCount === fishLevel && fishLevel < 5) {
 						fishLevel++
+						// 釣り針を足す
+						createHari()
 					}
 					// 釣った数を戻す
 					nowFishCount = 0
@@ -233,26 +265,23 @@ export function main(param: GameMainParameterObject): void {
 					karaoke.x += data.speed ?? -10
 					karaoke.modified()
 				})
-				karaoke.update.add(() => {
-					// クリックしたら
-					scene.pointDownCapture.add(() => {
-						// 魚を釣る
-						karaoke.update.add(() => {
-							if (isMoveTop) {
+				// クリックしたら
+				scene.pointDownCapture.add(() => {
+					karaoke.update.add(() => {
+						if (isMoveTop) {
+							turibariList.forEach(hari => {
 								if (g.Collision.intersectAreas(karaoke, hari)) {
 									// 魚の動きを消す
 									karaoke.update.removeAll()
 									// 釣れた数を増やす
 									nowFishCount++
-
 									karaoke.update.add(() => {
 										karaoke.y += -10
 										karaoke.modified()
 									})
 								}
-							}
-
-						})
+							})
+						}
 					})
 				})
 
