@@ -24,8 +24,12 @@ export function main(param: GameMainParameterObject): void {
 	let nowFishCount = 0
 	/** @param turibariList 釣り針の画像の配列 */
 	const turibariList: g.Sprite[] = []
-	/** @param fishList  */
+	/** @param fishList 生成した魚の配列 */
 	const fishList: g.Sprite[] = []
+	/** @param turibariXposList 釣り針の横の位置の配列 */
+	const turibariXposList: number[] = []
+	/** @param turibariXposList 釣り針の縦の位置の配列 */
+	const turibariYposList: number[] = []
 
 	scene.loaded.add(() => {
 
@@ -117,6 +121,8 @@ export function main(param: GameMainParameterObject): void {
 			})
 			scene.append(hari_)
 			turibariList.push(hari_)
+			turibariXposList.push(xPos)
+			turibariYposList.push(yPos)
 		}
 
 		// まず２個
@@ -213,9 +219,14 @@ export function main(param: GameMainParameterObject): void {
 		interface FishTag {
 			isFished: boolean,
 			point: number,
-			name: string
+			name: string,
+			fishedXPos?: number,
+			fishCount?: number
 		}
 
+		let xPosList = [50, 40, 30, 20, 10]
+
+		// 押したとき。釣ります！
 		scene.pointDownCapture.add(() => {
 			scene.update.add(() => {
 				fishList.forEach(fish => {
@@ -223,20 +234,30 @@ export function main(param: GameMainParameterObject): void {
 						// まだ釣り上げていない場合
 						// 魚のtagにつけるオブジェクトに釣り上げたかどうかあるのでそれを使う。
 						// それと引き上げたときのみ動くように
-						// a
+						// それと同時に釣り上げる限界数より今釣ってる数のほうが小さい場合に
 						if (!(fish.tag as FishTag).isFished && isMoveTop && (nowFishCount < fishLevel)) {
 							// 当たり判定。
 							if (g.Collision.intersectAreas(fish, hari)) {
 								// 釣り上げた判定に使う。
 								(fish.tag as FishTag).isFished = true
-								const data = (fish.tag as FishTag)
+								const data = (fish.tag as FishTag);
+								(fish.tag as FishTag).fishedXPos = hari.x
 								// 魚の動きを消す
-								fish.update.removeAll()
+								fish.update.removeAll();
 								// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
+								(fish.tag as FishTag).fishCount = nowFishCount
 								nowFishCount++
+								// 初期の縦の位置設定
+								fish.y = turibariYposList[(fish.tag as FishTag).fishCount]
 								fish.update.add(() => {
+									console.log(turibariXposList.length + " / " + (fish.tag as FishTag).fishCount)
 									// 釣り上げる～
 									fish.y += -10
+									// 釣れた魚の位置合わせ
+									fish.x = turibariXposList[(fish.tag as FishTag).fishCount]
+									if ((fish.tag as FishTag).fishCount % 2 === 1) {
+										fish.x = turibariXposList[(fish.tag as FishTag).fishCount] - fish.width
+									}
 									fish.modified()
 									if (20 >= fish.y) {
 										// 釣り上げた。魚削除など
