@@ -24,6 +24,8 @@ export function main(param: GameMainParameterObject): void {
 	let nowFishCount = 0
 	/** @param turibariList 釣り針の画像の配列 */
 	const turibariList: g.Sprite[] = []
+	/** @param fishList  */
+	const fishList: g.Sprite[] = []
 
 	scene.loaded.add(() => {
 
@@ -137,7 +139,7 @@ export function main(param: GameMainParameterObject): void {
 				// 釣り上げる
 				ito.update.add(() => {
 					isMoveTop = true
-					if (80 <= ito.height) {
+					if (100 <= ito.height) {
 						ito.height -= 10
 						turibariList.forEach(hari => {
 							hari.y -= 10
@@ -180,6 +182,7 @@ export function main(param: GameMainParameterObject): void {
 					nowFishCount = 0
 				}, 1000)
 
+
 				//// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
 				//// 引き上げたときに何かしたい場合はここに書いてね。
 				//scene.setTimeout(() => {
@@ -201,6 +204,58 @@ export function main(param: GameMainParameterObject): void {
 				//	nowFishCount = 0
 				//}, 2000)
 			}
+		})
+
+		/**
+		 * 魚のtagに付けるオブジェクト。
+		 * 名前や加点ポイント、釣り上げたかどうかなどが入っている。
+		 */
+		interface FishTag {
+			isFished: boolean,
+			point: number,
+			name: string
+		}
+
+		scene.pointDownCapture.add(() => {
+			fishList.forEach(fish => {
+				turibariList.forEach(hari => {
+					// まだ釣り上げていない場合
+					// 魚のtagにつけるオブジェクトに釣り上げたかどうかあるのでそれを使う。
+					if (!(fish.tag as FishTag).isFished) {
+						// 当たり判定。
+						if (g.Collision.intersectAreas(fish, hari)) {
+							// 釣り上げた判定に使う。
+							(fish.tag as FishTag).isFished = true
+							const data = (fish.tag as FishTag)
+							// 魚の動きを消す
+							fish.update.removeAll()
+							// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
+							nowFishCount++
+							fish.update.add(() => {
+								// 釣り上げる～
+								fish.y += -10
+								fish.modified()
+								if (20 >= fish.y) {
+									// 釣り上げた。魚削除など
+									if (data.point >= 0) {
+										// 正の数の場合は＋が省略されるので分岐
+										fishLabel.text += `${data.name} +${data.point}\n`
+									} else {
+										fishLabel.text += `${data.name} ${data.point}\n`
+									}
+									fishLabel.invalidate()
+									fish.update.removeAll()
+									fish.destroy()
+									// スコア表示
+									g.game.vars.gameState.score += data.point
+									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
+									scoreLabel.invalidate()
+								}
+							})
+						}
+					}
+				})
+			})
 		})
 
 		// 魚？生成。
@@ -265,25 +320,37 @@ export function main(param: GameMainParameterObject): void {
 					karaoke.x += data.speed ?? -10
 					karaoke.modified()
 				})
-				// クリックしたら
-				scene.pointDownCapture.add(() => {
-					karaoke.update.add(() => {
-						if (isMoveTop) {
-							turibariList.forEach(hari => {
-								if (g.Collision.intersectAreas(karaoke, hari)) {
-									// 魚の動きを消す
-									karaoke.update.removeAll()
-									// 釣れた数を増やす
-									nowFishCount++
-									karaoke.update.add(() => {
-										karaoke.y += -10
-										karaoke.modified()
-									})
-								}
-							})
-						}
-					})
-				})
+				fishList.push(karaoke)
+
+				// 魚の情報を
+				const tag: FishTag = {
+					isFished: false,
+					point: data.point,
+					name: data.name
+				}
+				// 入れる
+				karaoke.tag = tag
+
+				// // クリックしたら
+				// scene.pointDownCapture.add(() => {
+				// 	karaoke.update.add(() => {
+				// 		if (isMoveTop) {
+				// 			turibariList.forEach(hari => {
+				// 				if (g.Collision.intersectAreas(karaoke, hari)) {
+				// 					// 魚の動きを消す
+				// 					karaoke.update.removeAll()
+				// 					console.log("つった")
+				// 					// 釣れた数を増やす
+				// 					nowFishCount++
+				// 					karaoke.update.add(() => {
+				// 						karaoke.y += -10
+				// 						karaoke.modified()
+				// 					})
+				// 				}
+				// 			})
+				// 		}
+				// 	})
+				// })
 
 				// karaoke.update.add(() => {
 				// 	// 当たったとき
