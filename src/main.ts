@@ -9,7 +9,7 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "hari", "hari_hanten", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
+		assetIds: ["toomo", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -122,7 +122,6 @@ export function main(param: GameMainParameterObject): void {
 			scene.append(hari_)
 			turibariList.push(hari_)
 			turibariXposList.push(xPos)
-			turibariYposList.push(yPos)
 		}
 
 		// まず２個
@@ -147,10 +146,25 @@ export function main(param: GameMainParameterObject): void {
 					isMoveTop = true
 					if (100 <= ito.height) {
 						ito.height -= 10
+						// 釣り針上げる
 						turibariList.forEach(hari => {
 							hari.y -= 10
 							hari.modified()
 							hari.invalidate()
+						})
+						// 魚を釣る。こっちに持ってきた。ずれるので
+						fishList.forEach(fish => {
+							if ((fish.tag as FishTag).isFished) {
+								// 釣り上げる～
+								fish.y += -10
+								fish.modified()
+								// 縦の位置もずらす
+								// ずらさないとあとから釣れた魚の位置がおかしくなるため
+								turibariYposList.splice(0)
+								turibariList.forEach(hari => {
+									turibariYposList.push(hari.y - 10)
+								})
+							}
 						})
 					}
 					ito.modified()
@@ -159,6 +173,11 @@ export function main(param: GameMainParameterObject): void {
 				// 海に戻す
 				scene.setTimeout(() => {
 					isMoveTop = false
+					fishList.forEach(fish => {
+						if ((fish.tag as FishTag).isFished) {
+							(fish.tag as FishTag).isEnd = true
+						}
+					})
 					ito.update.removeAll()
 					ito.update.add(() => {
 						if (g.game.height >= ito.height + 100) {
@@ -218,16 +237,20 @@ export function main(param: GameMainParameterObject): void {
 		 */
 		interface FishTag {
 			isFished: boolean,
+			isEnd?: boolean,
 			point: number,
 			name: string,
 			fishedXPos?: number,
 			fishCount?: number
 		}
 
-		let xPosList = [50, 40, 30, 20, 10]
-
 		// 押したとき。釣ります！
 		scene.pointDownCapture.add(() => {
+			// 配列全消し。高さの値を入れ直す
+			turibariYposList.splice(0)
+			turibariList.forEach(hari => {
+				turibariYposList.push(hari.y)
+			})
 			scene.update.add(() => {
 				fishList.forEach(fish => {
 					turibariList.forEach(hari => {
@@ -246,20 +269,26 @@ export function main(param: GameMainParameterObject): void {
 								fish.update.removeAll();
 								// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
 								(fish.tag as FishTag).fishCount = nowFishCount
-								nowFishCount++
 								// 初期の縦の位置設定
+								// console.log(turibariYposList[(fish.tag as FishTag).fishCount])
 								fish.y = turibariYposList[(fish.tag as FishTag).fishCount]
+								nowFishCount++
+								fish.modified()
 								fish.update.add(() => {
-									console.log(turibariXposList.length + " / " + (fish.tag as FishTag).fishCount)
-									// 釣り上げる～
-									fish.y += -10
 									// 釣れた魚の位置合わせ
+									// これで針と魚が重なるようになる。
 									fish.x = turibariXposList[(fish.tag as FishTag).fishCount]
 									if ((fish.tag as FishTag).fishCount % 2 === 1) {
-										fish.x = turibariXposList[(fish.tag as FishTag).fishCount] - fish.width
+										fish.x = turibariXposList[(fish.tag as FishTag).fishCount] - (fish.width / 2)
+									}
+									// なんとなく角度をつけてみる
+									if ((fish.tag as FishTag).fishCount % 2 === 0) {
+										fish.angle = 20
+									} else {
+										fish.angle = 340
 									}
 									fish.modified()
-									if (20 >= fish.y) {
+									if (data.isEnd !== undefined) {
 										// 釣り上げた。魚削除など
 										if (data.point >= 0) {
 											// 正の数の場合は＋が省略されるので分岐
@@ -300,7 +329,6 @@ export function main(param: GameMainParameterObject): void {
 			//	// 学校（唯一の減点要素）
 			createFish({ asset: "irasutoya_kousya", name: "スクーリング", point: -100 })
 		}, 2000)
-
 
 		/**
 		 * 魚を作成する関数。
