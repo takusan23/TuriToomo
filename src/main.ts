@@ -9,7 +9,7 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
+		assetIds: ["toomo", "hari", "turi_2_ryunen", "turi_3_ryunen", "turi_4_ryunen", "turi_5_ryunen", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -77,56 +77,62 @@ export function main(param: GameMainParameterObject): void {
 		scene.append(fishLabel)
 
 		// 釣り糸
-		let ito = new g.Sprite({
+		const ito = new g.FilledRect({
 			scene: scene,
-			src: scene.assets["turi_2_ryunen"],
-			width: 40,
-			height: (scene.assets["turi_2_ryunen"] as g.ImageAsset).height,
+			cssColor: "black",
+			width: 5,
+			height: 220,
 			x: player.x + 100,
 			y: player.y + 20
 		})
 		scene.append(ito)
 
-		// とりあえず非表示？
-		// 画像の高さ変更の場合は modified() + invalidate() を呼び出す必要がある模様。
-		ito.height = 0
-		ito.modified()
-		ito.invalidate()
+		const hari = new g.Sprite({
+			scene: scene,
+			src: scene.assets["hari"],
+			x: ito.x,
+			y: ito.height + 50
+		})
+		scene.append(hari)
 
 		// 押したとき
 		// ここでは釣り糸を垂らして回収するまでをやってる。
+		/** @param isFishing クリック連打対策用変数。釣り上げ動作以外で使ってない */
 		let isFishing = false
+		/** @param isMoveTop 釣り上げ動作中はtrue */
+		let isMoveTop = false
 		scene.pointDownCapture.add(() => {
 			// クリック連打対策
 			if (!isFishing) {
 				isFishing = true
+				isMoveTop = false
 				ito.update.removeAll()
-				// まず下げる
+
+				// 釣り上げる
 				ito.update.add(() => {
-					if (g.game.height >= ito.height + 100) {
-						ito.height += 10
+					isMoveTop = true
+					if (80 <= ito.height) {
+						ito.height -= 10
+						hari.y -= 10
 					}
 					ito.modified()
-					ito.invalidate()
+					hari.modified()
+					hari.invalidate()
 				})
-				// 1秒後に引き上げる
+
+				// 海に戻す
 				scene.setTimeout(() => {
+					isMoveTop = false
 					ito.update.removeAll()
 					ito.update.add(() => {
-						if (0 <= ito.height) {
-							ito.height -= 10
+						if (g.game.height >= ito.height + 100) {
+							ito.height += 10
+							hari.y += 10
 						}
 						ito.modified()
-						ito.invalidate()
+						hari.modified()
+						hari.invalidate()
 					})
-				}, 1000)
-				// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
-				// 引き上げたときに何かしたい場合はここに書いてね。
-				scene.setTimeout(() => {
-					ito.update.removeAll()
-					ito.height = 0
-					ito.modified()
-					ito.invalidate()
 					isFishing = false
 					// 釣った魚も消す
 					scene.setTimeout(() => {
@@ -137,27 +143,31 @@ export function main(param: GameMainParameterObject): void {
 					// ただし5個まで。
 					if (nowFishCount === fishLevel && fishLevel < 5) {
 						fishLevel++
-						// 釣り針増やした画像に変えたい
-						scene.remove(ito)
-						// んだけど多分生成したSpriteのsrcを変えることはできないので作り直すしかないと思われ
-						ito = new g.Sprite({
-							scene: scene,
-							src: scene.assets[`turi_${fishLevel}_ryunen`],
-							width: 40,
-							height: (scene.assets[`turi_${fishLevel}_ryunen`] as g.ImageAsset).height,
-							x: player.x + 100,
-							y: player.y + 20
-						})
-						scene.append(ito)
-						// とりあえず非表示？
-						// 画像の高さ変更の場合は modified() + invalidate() を呼び出す必要がある模様。
-						ito.height = 0
-						ito.modified()
-						ito.invalidate()
 					}
 					// 釣った数を戻す
 					nowFishCount = 0
-				}, 2000)
+				}, 1000)
+
+				//// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
+				//// 引き上げたときに何かしたい場合はここに書いてね。
+				//scene.setTimeout(() => {
+				//	ito.update.removeAll()
+				//	ito.height = 0
+				//	ito.modified()
+				//	isFishing = false
+				//	// 釣った魚も消す
+				//	scene.setTimeout(() => {
+				//		fishLabel.text = ""
+				//		fishLabel.invalidate()
+				//	}, 500)
+				//	// いっぱいまで釣ったら釣れる数を増やす (釣れる数3で同時に3匹釣ったら→釣れる数を1足す)
+				//	// ただし5個まで。
+				//	if (nowFishCount === fishLevel && fishLevel < 5) {
+				//		fishLevel++
+				//	}
+				//	// 釣った数を戻す
+				//	nowFishCount = 0
+				//}, 2000)
 			}
 		})
 
@@ -178,6 +188,7 @@ export function main(param: GameMainParameterObject): void {
 			//	// 学校（唯一の減点要素）
 			createFish({ asset: "irasutoya_kousya", name: "スクーリング", point: -100 })
 		}, 2000)
+
 
 		/**
 		 * 魚を作成する関数。
@@ -223,49 +234,72 @@ export function main(param: GameMainParameterObject): void {
 					karaoke.modified()
 				})
 				karaoke.update.add(() => {
-					// 当たったとき
-					if (g.Collision.intersectAreas(karaoke, ito)) {
-						if (nowFishCount < fishLevel) {
-							// 魚の動きを消す
-							karaoke.update.removeAll()
-							// 釣れた数を増やす
-							nowFishCount++
-							karaoke.update.add(() => {
-								// 上昇
-								karaoke.y = ito.height - 40
-								// 釣り針に引っかかった感じにするため重ねる。
-								// 何故か同時に釣り上げたとき向きが同じになってしまうのでtagに位置を入れてない場合のみ位置を入れるように。
-								if (karaoke.tag === undefined || karaoke.tag === null) {
-									if (nowFishCount % 2 === 1) {
-										karaoke.x = ito.x + karaoke.width - 70
-										karaoke.angle = 20
-									} else {
-										karaoke.x = ito.x - karaoke.width + 20
-										karaoke.angle = 340
-									}
-									karaoke.tag = karaoke.x
-								}
-								karaoke.modified()
-								if (20 >= karaoke.y) {
-									// 釣り上げた。魚削除など
-									if (data.point >= 0) {
-										// 正の数の場合は＋が省略されるので分岐
-										fishLabel.text += `${data.name} +${data.point}\n`
-									} else {
-										fishLabel.text += `${data.name} ${data.point}\n`
-									}
-									fishLabel.invalidate()
+					// クリックしたら
+					scene.pointDownCapture.add(() => {
+						// 魚を釣る
+						karaoke.update.add(() => {
+							if (isMoveTop) {
+								if (g.Collision.intersectAreas(karaoke, hari)) {
+									// 魚の動きを消す
 									karaoke.update.removeAll()
-									karaoke.destroy()
-									// スコア表示
-									g.game.vars.gameState.score += data.point
-									scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
-									scoreLabel.invalidate()
+									// 釣れた数を増やす
+									nowFishCount++
+
+									karaoke.update.add(() => {
+										karaoke.y += -10
+										karaoke.modified()
+									})
 								}
-							})
-						}
-					}
+							}
+
+						})
+					})
 				})
+
+				// karaoke.update.add(() => {
+				// 	// 当たったとき
+				// 	if (g.Collision.intersectAreas(karaoke, ito)) {
+				// 		if (nowFishCount < fishLevel) {
+				// 			// 魚の動きを消す
+				// 			karaoke.update.removeAll()
+				// 			// 釣れた数を増やす
+				// 			nowFishCount++
+				// 			karaoke.update.add(() => {
+				// 				// 上昇
+				// 				karaoke.y = ito.height - 40
+				// 				// 釣り針に引っかかった感じにするため重ねる。
+				// 				// 何故か同時に釣り上げたとき向きが同じになってしまうのでtagに位置を入れてない場合のみ位置を入れるように。
+				// 				if (karaoke.tag === undefined || karaoke.tag === null) {
+				// 					if (nowFishCount % 2 === 1) {
+				// 						karaoke.x = ito.x + karaoke.width - 70
+				// 						// karaoke.angle = 20
+				// 					} else {
+				// 						karaoke.x = ito.x - karaoke.width + 20
+				// 						// karaoke.angle = 340
+				// 					}
+				// 					karaoke.tag = karaoke.x
+				// 				}
+				// 				karaoke.modified()
+				// 				if (20 >= karaoke.y) {
+				// 					// 釣り上げた。魚削除など
+				// 					if (data.point >= 0) {
+				// 						// 正の数の場合は＋が省略されるので分岐
+				// 						fishLabel.text += `${data.name} +${data.point}\n`
+				// 					} else {
+				// 						fishLabel.text += `${data.name} ${data.point}\n`
+				// 					}
+				// 					fishLabel.invalidate()
+				// 					karaoke.update.removeAll()
+				// 					karaoke.destroy()
+				// 					// スコア表示
+				// 					g.game.vars.gameState.score += data.point
+				// 					scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
+				// 					scoreLabel.invalidate()
+				// 				}
+				// 			})
+				// 		}
+				// 	}
+				// })
 			}, data.interval ?? g.game.random.get(100, 1000))
 		}
 
