@@ -27,7 +27,7 @@
 		},
 		"toomo": {
 			"type": "image",
-			"width": 75,
+			"width": 100,
 			"height": 75,
 			"path": "image/toomo.png"
 		},
@@ -114,6 +114,30 @@
 			"path": "audio/GET_Short",
 			"systemId": "sound",
 			"duration": 442
+		},
+		"korean": {
+			"type": "image",
+			"width": 80,
+			"height": 67,
+			"path": "image/korean.png"
+		},
+		"launch": {
+			"type": "image",
+			"width": 80,
+			"height": 49,
+			"path": "image/launch.png"
+		},
+		"taoru": {
+			"type": "image",
+			"width": 80,
+			"height": 85,
+			"path": "image/taoru.png"
+		},
+		"nami": {
+			"type": "image",
+			"width": 640,
+			"height": 100,
+			"path": "image/nami.png"
 		}
 	},
 	"environment": {

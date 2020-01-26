@@ -10,7 +10,7 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
 		// tslint:disable-next-line: max-line-length
-		assetIds: ["toomo", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "A", "D", "H", "GET", "GET_Short"]
+		assetIds: ["toomo", "nami", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -26,7 +26,7 @@ export function main(param: GameMainParameterObject): void {
 	/** @param turibariList 釣り針の画像の配列 */
 	const turibariList: g.Sprite[] = []
 	/** @param fishList 生成した魚の配列 */
-	const fishList: g.Sprite[] = []
+	const fishList: g.E[] = []
 	/** @param turibariXposList 釣り針の横の位置の配列 */
 	const turibariXposList: number[] = []
 	/** @param turibariXposList 釣り針の縦の位置の配列 */
@@ -44,6 +44,14 @@ export function main(param: GameMainParameterObject): void {
 			y: 50
 		})
 		scene.append(player)
+
+		// 波を生成します
+		const wave = new g.Sprite({
+			scene: scene,
+			src: scene.assets["nami"],
+			y: 100
+		})
+		scene.append(wave)
 
 		// フォントの生成
 		const font = new g.DynamicFont({
@@ -207,28 +215,6 @@ export function main(param: GameMainParameterObject): void {
 					// 釣った数を戻す
 					nowFishCount = 0
 				}, 1000)
-
-
-				//// その1秒後に引き上げる処理も消す。あとクリック対策(isFishing)をfalseへ。
-				//// 引き上げたときに何かしたい場合はここに書いてね。
-				//scene.setTimeout(() => {
-				//	ito.update.removeAll()
-				//	ito.height = 0
-				//	ito.modified()
-				//	isFishing = false
-				//	// 釣った魚も消す
-				//	scene.setTimeout(() => {
-				//		fishLabel.text = ""
-				//		fishLabel.invalidate()
-				//	}, 500)
-				//	// いっぱいまで釣ったら釣れる数を増やす (釣れる数3で同時に3匹釣ったら→釣れる数を1足す)
-				//	// ただし5個まで。
-				//	if (nowFishCount === fishLevel && fishLevel < 5) {
-				//		fishLevel++
-				//	}
-				//	// 釣った数を戻す
-				//	nowFishCount = 0
-				//}, 2000)
 			}
 		})
 
@@ -237,12 +223,34 @@ export function main(param: GameMainParameterObject): void {
 		 * 名前や加点ポイント、釣り上げたかどうかなどが入っている。
 		 */
 		interface FishTag {
+			/** @param isFished 釣り上げられたらtrue */
 			isFished: boolean,
+			/** @param isEnd もう釣り上げて存在しないときtrue */
 			isEnd?: boolean,
+			/** @param point 加点ポイント */
 			point: number,
+			/** @param name 釣ったときに表示する名前 */
 			name: string,
-			fishedXPos?: number,
+			/** @param fishCount 釣ったときに何番目に釣れたかを入れる。 */
 			fishCount?: number
+			/** @param isText テキストの場合true（例：令和2020年） */
+			isText?: boolean
+		}
+
+		/**
+		 * createFish()の引数で使うオブジェクト。
+		 */
+		interface FishObj {
+			/** @param asset 必須（画像を表示させる場合は） アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
+			asset?: string,
+			/** @param speed 自由 移動速度です。マイナスで頼んだ。省略時-10です */
+			speed?: number,
+			/** @param point 必須 釣り上げたときの加点数です。 */
+			point: number,
+			/** @param  name 必須 魚の名前。釣り上げたときに表示させます。 */
+			name: string,
+			/** @param  text 必須（文字を流す場合は） 魚の名前。釣り上げたときに表示させます。 */
+			text?: string
 		}
 
 		// 押したとき。釣ります！
@@ -256,16 +264,15 @@ export function main(param: GameMainParameterObject): void {
 				fishList.forEach(fish => {
 					turibariList.forEach(hari => {
 						// まだ釣り上げていない場合
-						// 魚のtagにつけるオブジェクトに釣り上げたかどうかあるのでそれを使う。
+						// 魚のtagにつけるオブジェクトに釣り上げたかどうがの値がfalseで
 						// それと引き上げたときのみ動くように
 						// それと同時に釣り上げる限界数より今釣ってる数のほうが小さい場合に
-						if (!(fish.tag as FishTag).isFished && isMoveTop && (nowFishCount < fishLevel)) {
+						if ((fish.tag as FishTag).isFished === false && isMoveTop && (nowFishCount < fishLevel)) {
 							// 当たり判定。
 							if (g.Collision.intersectAreas(fish, hari)) {
 								// 釣り上げた判定に使う。
 								(fish.tag as FishTag).isFished = true
-								const data = (fish.tag as FishTag);
-								(fish.tag as FishTag).fishedXPos = hari.x
+								const data = (fish.tag as FishTag)
 								// 魚の動きを消す
 								fish.update.removeAll();
 								// 釣れた数を増やす。のちに釣り針を増やすのに比較で使う。
@@ -275,6 +282,7 @@ export function main(param: GameMainParameterObject): void {
 								fish.y = turibariYposList[(fish.tag as FishTag).fishCount];
 
 								// 音を鳴らしてみた
+								// そーす：https://www.youtube.com/watch?v=wWqhBQVLB5I
 								(scene.assets["GET_Short"] as g.AudioAsset).play()
 
 								nowFishCount++
@@ -292,6 +300,7 @@ export function main(param: GameMainParameterObject): void {
 									} else {
 										fish.angle = 340
 									}
+									// 更新
 									fish.modified()
 									if (data.isEnd !== undefined) {
 										// 釣り上げた。魚削除など
@@ -317,53 +326,20 @@ export function main(param: GameMainParameterObject): void {
 			})
 		})
 
-		// 魚？生成。
-		scene.setInterval(() => {
-			// バックレカラオケ
-			createFish({ asset: "karaoke", point: 100, name: "バックレカラオケ" })
-			//	// 通知表
-			createFish({ asset: "tuusinbo", name: "通信簿", point: 50 })
-			//	// レモン
-			createFish({ asset: "inu", name: "レモン", point: 100 })
-		}, 1000)
-		scene.setInterval(() => {
-			// DT
-			createFish({ asset: "doutei_toomo", name: "DT", point: 200 })
-		}, 5000)
-		scene.setInterval(() => {
-			//	// 学校（唯一の減点要素）
-			createFish({ asset: "irasutoya_kousya", name: "スクーリング", point: -100 })
-		}, 2000)
-
 		/**
-		 * 魚を作成する関数。
-		 * 制限時間を過ぎた場合、戻り値はnullになります。
-		 */
-		const createFish = (data: {
-
-			/** @param asset 必須 アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
-			asset: string,
-
-			/** @param speed 自由 移動速度です。マイナスで頼んだ。省略時-10です */
-			speed?: number,
-
-			/** @param point 必須 釣り上げたときの加点数です。 */
-			point: number
-
-			/** @param  interval 任意 出現間隔です。省略時 100~1000 からランダムです。 */
-			interval?: number
-
-			/** @param  name 必須 魚の名前。釣り上げたときに表示させます。 */
-			name: string
-
-		}): void => {
+ 		* 魚を作成する関数。
+ 		* 制限時間を過ぎた場合、戻り値はnullになります。
+ 		*/
+		const createFish = (data: FishObj): void => {
 			// 制限時間
 			if (time <= 0) {
 				return null
 			}
-			scene.setTimeout(() => {
-				// 魚生成
-				const karaoke = new g.Sprite({
+			// 魚生成 or 文字生成（例：令和2020年）
+			let karaoke: g.E
+			if (typeof data.asset !== "undefined") {
+				// 魚
+				karaoke = new g.Sprite({
 					scene: scene,
 					src: scene.assets[data.asset],
 					width: (scene.assets[data.asset] as g.ImageAsset).width,
@@ -371,96 +347,81 @@ export function main(param: GameMainParameterObject): void {
 					x: g.game.width,
 					y: g.game.random.get(150, g.game.height - (scene.assets[data.asset] as g.ImageAsset).height)
 				})
-				// 追加
-				scene.append(karaoke)
-				// 適当に流す
-				karaoke.update.add(() => {
-					karaoke.x += data.speed ?? -10
-					karaoke.modified()
+			} else {
+				// 文字
+				karaoke = new g.Label({
+					scene: scene,
+					font: font,
+					text: data.text,
+					fontSize: 20,
+					x: g.game.width,
+					y: g.game.random.get(150, g.game.height - 20)
 				})
-				fishList.push(karaoke)
+			}
 
-				// 魚の情報を
-				const tag: FishTag = {
-					isFished: false,
-					point: data.point,
-					name: data.name
-				}
-				// 入れる
-				karaoke.tag = tag
+			// 追加
+			scene.append(karaoke)
+			// 適当に流す
+			karaoke.update.add(() => {
+				karaoke.x += data.speed ?? -10
+				karaoke.modified()
+			})
+			fishList.push(karaoke)
 
-				// // クリックしたら
-				// scene.pointDownCapture.add(() => {
-				// 	karaoke.update.add(() => {
-				// 		if (isMoveTop) {
-				// 			turibariList.forEach(hari => {
-				// 				if (g.Collision.intersectAreas(karaoke, hari)) {
-				// 					// 魚の動きを消す
-				// 					karaoke.update.removeAll()
-				// 					console.log("つった")
-				// 					// 釣れた数を増やす
-				// 					nowFishCount++
-				// 					karaoke.update.add(() => {
-				// 						karaoke.y += -10
-				// 						karaoke.modified()
-				// 					})
-				// 				}
-				// 			})
-				// 		}
-				// 	})
-				// })
-
-				// karaoke.update.add(() => {
-				// 	// 当たったとき
-				// 	if (g.Collision.intersectAreas(karaoke, ito)) {
-				// 		if (nowFishCount < fishLevel) {
-				// 			// 魚の動きを消す
-				// 			karaoke.update.removeAll()
-				// 			// 釣れた数を増やす
-				// 			nowFishCount++
-				// 			karaoke.update.add(() => {
-				// 				// 上昇
-				// 				karaoke.y = ito.height - 40
-				// 				// 釣り針に引っかかった感じにするため重ねる。
-				// 				// 何故か同時に釣り上げたとき向きが同じになってしまうのでtagに位置を入れてない場合のみ位置を入れるように。
-				// 				if (karaoke.tag === undefined || karaoke.tag === null) {
-				// 					if (nowFishCount % 2 === 1) {
-				// 						karaoke.x = ito.x + karaoke.width - 70
-				// 						// karaoke.angle = 20
-				// 					} else {
-				// 						karaoke.x = ito.x - karaoke.width + 20
-				// 						// karaoke.angle = 340
-				// 					}
-				// 					karaoke.tag = karaoke.x
-				// 				}
-				// 				karaoke.modified()
-				// 				if (20 >= karaoke.y) {
-				// 					// 釣り上げた。魚削除など
-				// 					if (data.point >= 0) {
-				// 						// 正の数の場合は＋が省略されるので分岐
-				// 						fishLabel.text += `${data.name} +${data.point}\n`
-				// 					} else {
-				// 						fishLabel.text += `${data.name} ${data.point}\n`
-				// 					}
-				// 					fishLabel.invalidate()
-				// 					karaoke.update.removeAll()
-				// 					karaoke.destroy()
-				// 					// スコア表示
-				// 					g.game.vars.gameState.score += data.point
-				// 					scoreLabel.text = `SCORE: ${g.game.vars.gameState.score}`
-				// 					scoreLabel.invalidate()
-				// 				}
-				// 			})
-				// 		}
-				// 	}
-				// })
-			}, data.interval ?? g.game.random.get(100, 1000))
+			// 魚の情報を
+			const tag: FishTag = {
+				isFished: false,
+				point: data.point,
+				name: data.name,
+				isText: (typeof data.text !== "undefined")
+			}
+			// 入れる
+			karaoke.tag = tag
 		}
 
-		/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。 */
+		/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。JSの物を使うとタイムシフトでの動作がおかしくなるためだって */
 		const random = (min: number, max: number): number => {
 			return g.game.random.get(min, max)
 		}
+
+		const karaokeObj: FishObj = { asset: "karaoke", point: 200, name: "バックレカラオケ" }
+		const tuusinboObj: FishObj = { asset: "tuusinbo", name: "通信簿", point: 100 }
+		const inuObj: FishObj = { asset: "inu", name: "レモン", point: 200 }
+		const dtObj: FishObj = { asset: "doutei_toomo", name: "DT", point: 500 }
+		const ayaseObj: FishObj = { asset: "irasutoya_kousya", name: "スクーリング", point: -100 }
+		const koreanObj: FishObj = { asset: "korean", name: "韓国", point: 200 }
+		const launchObj: FishObj = { asset: "launch", name: "昼食", point: 200 }
+		const katsudonObj: FishObj = { asset: "taoru", name: "カツドン", point: 200 }
+		// 令和2020年
+		const reiwa: FishObj = { text: "令和2020年", name: "令和2020年", point: 2020, speed: -30 }
+
+		/** @param fishTemplate 流す魚の種類。 */
+		const fishObjList: FishObj[] = [karaokeObj, tuusinboObj, inuObj, dtObj, ayaseObj, koreanObj, launchObj, katsudonObj]
+
+		// 定期実行。setIntervalもAkashicEngineで用意されてる方を使う。これもニコ生のTSを考慮しているらしい。
+		scene.setInterval(() => {
+			// ランダムで魚を生成する。
+			scene.setTimeout(() => {
+				const fishObj = fishObjList[random(0, fishObjList.length)]
+				createFish(fishObj)
+			}, random(100, 500))
+
+			// 残り40秒で増やす
+			if (time <= 40) {
+				// ランダムで魚を生成する。
+				scene.setTimeout(() => {
+					const fishObj = fishObjList[random(0, fishObjList.length)]
+					createFish(fishObj)
+				}, random(100, 500))
+			}
+
+		}, 500)
+
+		// 残り20秒で令和2020出す？
+		scene.setTimeout(() => {
+			// 流す魚の種類の配列に追加
+			fishObjList.push(reiwa)
+		}, 1000 * (time - 20)) // 制限時間から20引けば
 
 		const updateHandler = () => {
 			if (time <= 0) {
