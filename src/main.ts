@@ -276,7 +276,7 @@ export function main(param: GameMainParameterObject): void {
 				 */
 				interface FishObj {
 					/** @param asset 必須（画像を表示させる場合は） アセット（画像）の名前。先にシーン作成時のassetIdsに追加する必要があります。 */
-					asset?: string,
+					asset: string,
 					/** @param speed 自由 移動速度です。マイナスで頼んだ。省略時-10です */
 					speed?: number,
 					/** @param point 必須 釣り上げたときの加点数です。 */
@@ -363,17 +363,61 @@ export function main(param: GameMainParameterObject): void {
 					})
 				})
 
+				/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。JSの物を使うとタイムシフトでの動作がおかしくなるためだって */
+				const random = (min: number, max: number): number => {
+					return g.game.random.get(min, max)
+				}
+
+				/** @param fishTemplate 流す魚の種類。 */
+				let fishObjList: FishObj[]
+				const karaokeObj: FishObj = { asset: "karaoke", point: 200, name: "バックレカラオケ" }
+				const tuusinboObj: FishObj = { asset: "tuusinbo", name: "通信簿", point: 100 }
+				const inuObj: FishObj = { asset: "inu", name: "レモン", point: 200 }
+				const dtObj: FishObj = { asset: "doutei_toomo", name: "DT", point: 500 }
+				const ayaseObj: FishObj = { asset: "irasutoya_kousya", name: "スクーリング", point: -100 }
+				const koreanObj: FishObj = { asset: "korean", name: "韓国", point: 200 }
+				const launchObj: FishObj = { asset: "launch", name: "昼食", point: 200 }
+				const katsudonObj: FishObj = { asset: "taoru", name: "カツドン", point: 200 }
+				// 令和2020年
+				const reiwa: FishObj = { asset: undefined, text: "令和2020年", name: "令和2020年", point: 2020, speed: -30 }
+
+				/** @param fishTemplate 流す魚の種類。 */
+				fishObjList = [karaokeObj, tuusinboObj, inuObj, dtObj, ayaseObj, koreanObj, launchObj, katsudonObj]
+
+				// 定期実行。setIntervalもAkashicEngineで用意されてる方を使う。これもニコ生のTSを考慮しているらしい。
+				scene.setInterval(() => {
+
+					// ランダムで魚を生成する。
+					scene.setTimeout(() => {
+						// Array.length は配列の大きさ。でも0からではなく1なので-1しないといけない。
+						const randomNum = random(0, fishObjList.length - 1)
+						const fishObj = fishObjList[randomNum]
+						createFish(fishObj)
+					}, random(100, 500))
+
+					// 残り40秒で増やす
+					if (time <= 40) {
+						// ランダムで魚を生成する。
+						scene.setTimeout(() => {
+							const randomNum = random(0, fishObjList.length - 1)
+							const fishObj = fishObjList[randomNum]
+							createFish(fishObj)
+						}, random(100, 500))
+					}
+
+				}, 500)
+
 				/**
-					* 魚を作成する関数。
-					* 制限時間を過ぎた場合、戻り値はnullになります。
-					*/
+				 * 魚を作成する関数。
+				 * 制限時間を過ぎた場合、戻り値はnullになります。
+				 */
 				const createFish = (data: FishObj): void => {
 					// 制限時間
 					if (time <= 0) {
 						return null
 					}
-					// 魚生成 or 文字生成（例：令和2020年）
 					let karaoke: g.E
+					// 魚生成 or 文字生成（例：令和2020年）
 					if (typeof data.asset !== "undefined") {
 						// 魚
 						karaoke = new g.Sprite({
@@ -395,7 +439,6 @@ export function main(param: GameMainParameterObject): void {
 							y: g.game.random.get(150, g.game.height - 20)
 						})
 					}
-
 					// 追加
 					scene.append(karaoke)
 					// 適当に流す
@@ -410,49 +453,14 @@ export function main(param: GameMainParameterObject): void {
 						isFished: false,
 						point: data.point,
 						name: data.name,
-						isText: (typeof data.text !== "undefined")
+						isText: (typeof data.asset !== "undefined")
 					}
 					// 入れる
 					karaoke.tag = tag
+
 				}
 
-				/** 乱数生成機。長いので短くするだけで中身はAkashic Engineのものを利用している。JSの物を使うとタイムシフトでの動作がおかしくなるためだって */
-				const random = (min: number, max: number): number => {
-					return g.game.random.get(min, max)
-				}
 
-				const karaokeObj: FishObj = { asset: "karaoke", point: 200, name: "バックレカラオケ" }
-				const tuusinboObj: FishObj = { asset: "tuusinbo", name: "通信簿", point: 100 }
-				const inuObj: FishObj = { asset: "inu", name: "レモン", point: 200 }
-				const dtObj: FishObj = { asset: "doutei_toomo", name: "DT", point: 500 }
-				const ayaseObj: FishObj = { asset: "irasutoya_kousya", name: "スクーリング", point: -100 }
-				const koreanObj: FishObj = { asset: "korean", name: "韓国", point: 200 }
-				const launchObj: FishObj = { asset: "launch", name: "昼食", point: 200 }
-				const katsudonObj: FishObj = { asset: "taoru", name: "カツドン", point: 200 }
-				// 令和2020年
-				const reiwa: FishObj = { text: "令和2020年", name: "令和2020年", point: 2020, speed: -30 }
-
-				/** @param fishTemplate 流す魚の種類。 */
-				const fishObjList: FishObj[] = [karaokeObj, tuusinboObj, inuObj, dtObj, ayaseObj, koreanObj, launchObj, katsudonObj]
-
-				// 定期実行。setIntervalもAkashicEngineで用意されてる方を使う。これもニコ生のTSを考慮しているらしい。
-				scene.setInterval(() => {
-					// ランダムで魚を生成する。
-					scene.setTimeout(() => {
-						const fishObj = fishObjList[random(0, fishObjList.length)]
-						createFish(fishObj)
-					}, random(100, 500))
-
-					// 残り40秒で増やす
-					if (time <= 40) {
-						// ランダムで魚を生成する。
-						scene.setTimeout(() => {
-							const fishObj = fishObjList[random(0, fishObjList.length)]
-							createFish(fishObj)
-						}, random(100, 500))
-					}
-
-				}, 500)
 
 				// 残り20秒で令和2020出す？
 				scene.setTimeout(() => {
@@ -473,7 +481,7 @@ export function main(param: GameMainParameterObject): void {
 					}
 					// カウントダウン処理
 					time -= 1 / g.game.fps
-					timeLabel.text = "残り時間: " + Math.ceil(time)
+					timeLabel.text = "残り時間: " + Math.ceil(time) + "秒"
 					timeLabel.invalidate()
 				}
 				scene.update.add(updateHandler)
@@ -490,6 +498,13 @@ const createWave = (scene: g.Scene) => {
 	// 画像を切り替えて波っぽく
 	let waveType = 0
 	let wave: g.Sprite
+	wave = new g.Sprite({
+		scene: scene,
+		src: scene.assets["nami"],
+		y: 100
+	})
+	waveType++
+	scene.append(wave)
 	setInterval(() => {
 		let waveSrc = "nami"
 		switch (waveType) {
@@ -503,9 +518,7 @@ const createWave = (scene: g.Scene) => {
 				waveSrc = "nami_3"
 				break
 		}
-		if (typeof wave !== "undefined") {
-			scene.remove(wave)
-		}
+		scene.remove(wave)
 		wave = new g.Sprite({
 			scene: scene,
 			src: scene.assets[waveSrc],
