@@ -9,7 +9,8 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
-		assetIds: ["toomo", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "se"]
+		// tslint:disable-next-line: max-line-length
+		assetIds: ["toomo", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "A", "D", "H", "GET", "GET_Short"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -271,7 +272,11 @@ export function main(param: GameMainParameterObject): void {
 								(fish.tag as FishTag).fishCount = nowFishCount
 								// 初期の縦の位置設定
 								// console.log(turibariYposList[(fish.tag as FishTag).fishCount])
-								fish.y = turibariYposList[(fish.tag as FishTag).fishCount]
+								fish.y = turibariYposList[(fish.tag as FishTag).fishCount];
+
+								// 音を鳴らしてみた
+								(scene.assets["GET_Short"] as g.AudioAsset).play()
+
 								nowFishCount++
 								fish.modified()
 								fish.update.add(() => {

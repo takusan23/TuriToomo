@@ -84,6 +84,36 @@
 			"width": 30,
 			"height": 30,
 			"path": "image/hari_hanten.png"
+		},
+		"A": {
+			"type": "audio",
+			"path": "audio/A",
+			"systemId": "sound",
+			"duration": 233
+		},
+		"D": {
+			"type": "audio",
+			"path": "audio/D",
+			"systemId": "sound",
+			"duration": 233
+		},
+		"H": {
+			"type": "audio",
+			"path": "audio/H",
+			"systemId": "sound",
+			"duration": 395
+		},
+		"GET": {
+			"type": "audio",
+			"path": "audio/GET",
+			"systemId": "sound",
+			"duration": 906
+		},
+		"GET_Short": {
+			"type": "audio",
+			"path": "audio/GET_Short",
+			"systemId": "sound",
+			"duration": 442
 		}
 	},
 	"environment": {
