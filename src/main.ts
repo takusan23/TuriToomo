@@ -65,10 +65,9 @@ export function main(param: GameMainParameterObject): void {
 				// 多分放送画面が暗いと文字が見えないので水色をバックに
 				const blueBack = new g.FilledRect({
 					scene: scene,
-					cssColor: "teal",
+					cssColor: "lightskyblue",
 					width: g.game.width,
-					height: g.game.height,
-					opacity: 0.3
+					height: g.game.height
 				})
 				scene.append(blueBack)
 
