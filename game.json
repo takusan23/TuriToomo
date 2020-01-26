@@ -144,6 +144,18 @@
 			"width": 640,
 			"height": 320,
 			"path": "image/title.png"
+		},
+		"nami_2": {
+			"type": "image",
+			"width": 640,
+			"height": 100,
+			"path": "image/nami_2.png"
+		},
+		"nami_3": {
+			"type": "image",
+			"width": 640,
+			"height": 100,
+			"path": "image/nami_3.png"
 		}
 	},
 	"environment": {

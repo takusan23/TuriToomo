@@ -10,7 +10,7 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
 		// tslint:disable-next-line: max-line-length
-		assetIds: ["toomo", "nami", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short"]
+		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -62,6 +62,16 @@ export function main(param: GameMainParameterObject): void {
 			// ゲームロードできた
 			scene.loaded.add(() => {
 
+				// 多分放送画面が暗いと文字が見えないので水色をバックに
+				const blueBack = new g.FilledRect({
+					scene: scene,
+					cssColor: "teal",
+					width: g.game.width,
+					height: g.game.height,
+					opacity: 0.3
+				})
+				scene.append(blueBack)
+
 				// プレイヤーを生成します
 				const player = new g.Sprite({
 					scene: scene,
@@ -73,13 +83,9 @@ export function main(param: GameMainParameterObject): void {
 				})
 				scene.append(player)
 
-				// 波を生成します
-				const wave = new g.Sprite({
-					scene: scene,
-					src: scene.assets["nami"],
-					y: 100
-				})
-				scene.append(wave)
+				// 波の生成
+				// 長くなったので関数へ
+				createWave(scene)
 
 				// フォントの生成
 				const font = new g.DynamicFont({
@@ -97,7 +103,6 @@ export function main(param: GameMainParameterObject): void {
 					x: (g.game.width - 200)
 				})
 				scene.append(scoreLabel)
-
 
 				// 残り時間表示用ラベル
 				const timeLabel = new g.Label({
@@ -479,5 +484,37 @@ export function main(param: GameMainParameterObject): void {
 		}, 5000)
 	})
 	g.game.pushScene(titleScene)
+}
 
+const createWave = (scene: g.Scene) => {
+	// 画像を切り替えて波っぽく
+	let waveType = 0
+	let wave: g.Sprite
+	setInterval(() => {
+		let waveSrc = "nami"
+		switch (waveType) {
+			case 0:
+				waveSrc = "nami"
+				break
+			case 1:
+				waveSrc = "nami_2"
+				break
+			case 2:
+				waveSrc = "nami_3"
+				break
+		}
+		if (typeof wave !== "undefined") {
+			scene.remove(wave)
+		}
+		wave = new g.Sprite({
+			scene: scene,
+			src: scene.assets[waveSrc],
+			y: 100
+		})
+		scene.append(wave)
+		waveType++
+		if (waveType > 3) {
+			waveType = 0
+		}
+	}, 1000 * 2)
 }
