@@ -10,7 +10,7 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
 		// tslint:disable-next-line: max-line-length
-		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "irasutoya_kousya", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short"]
+		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "n_kou", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short"]
 	})
 	let time = 60 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -374,7 +374,7 @@ export function main(param: GameMainParameterObject): void {
 				const tuusinboObj: FishObj = { asset: "tuusinbo", name: "通信簿", point: 100 }
 				const inuObj: FishObj = { asset: "inu", name: "レモン", point: 200 }
 				const dtObj: FishObj = { asset: "doutei_toomo", name: "DT", point: 500 }
-				const ayaseObj: FishObj = { asset: "irasutoya_kousya", name: "スクーリング", point: -100 }
+				const ayaseObj: FishObj = { asset: "n_kou", name: "スクーリング", point: -100 }
 				const koreanObj: FishObj = { asset: "korean", name: "韓国", point: 200 }
 				const launchObj: FishObj = { asset: "launch", name: "昼食", point: 200 }
 				const katsudonObj: FishObj = { asset: "taoru", name: "カツドン", point: 200 }
