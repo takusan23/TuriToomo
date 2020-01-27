@@ -61,7 +61,8 @@ export function main(param: GameMainParameterObject): void {
 		titleScene.setTimeout(() => {
 			// ゲームロードできた
 			scene.loaded.add(() => {
-
+				// 5秒引いておく
+				time -= 5
 				// 多分放送画面が暗いと文字が見えないので水色をバックに
 				const blueBack = new g.FilledRect({
 					scene: scene,
@@ -458,8 +459,6 @@ export function main(param: GameMainParameterObject): void {
 					karaoke.tag = tag
 
 				}
-
-
 
 				// 残り20秒で令和2020出す？
 				scene.setTimeout(() => {
