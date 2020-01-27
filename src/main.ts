@@ -473,7 +473,7 @@ export function main(param: GameMainParameterObject): void {
 			// カウントダウン
 			const countdownInterval = scene.setInterval(() => {
 				// ゲーム終了
-				if (time <= -5) {
+				if (time <= 0) {
 					// RPGアツマール環境であればランキングを表示します
 					if (param.isAtsumaru) {
 						const boardId = 1
@@ -505,9 +505,9 @@ export function main(param: GameMainParameterObject): void {
 					// これで釣れなくなります
 					scene.pointDownCapture.removeAll()
 				}
-				if (time - 5 > 0) {
+				time -= 1
+				if (time - 5 >= 0) {
 					// カウントダウン処理
-					time -= 1
 					// ゲームが遊べる時は60秒。でもゲームは65秒あるので引いておく。
 					// 5秒足して置くことで読み込み遅れても5秒なら耐えられる。
 					timeLabel.text = "残り時間: " + Math.ceil(time - 5) + "秒"
