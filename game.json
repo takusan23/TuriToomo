@@ -162,6 +162,12 @@
 			"type": "script",
 			"path": "script/_bootstrap.js",
 			"global": true
+		},
+		"end": {
+			"type": "image",
+			"width": 360,
+			"height": 180,
+			"path": "image/end.png"
 		}
 	},
 	"environment": {
@@ -171,7 +177,7 @@
 				"ranking"
 			],
 			"preferredSessionParameters": {
-				"totalTimeLimit": 65
+				"totalTimeLimit": 70
 			}
 		}
 	},
