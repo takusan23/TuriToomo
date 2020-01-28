@@ -10,7 +10,7 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
 		// tslint:disable-next-line: max-line-length
-		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "n_kou", "karaoke_2", "tuusinbo", "korean", "launch", "taoru", "GET", "GET_Short", "end"]
+		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "n_kou", "karaoke_2", "tuusinbo", "korean", "gozyou", "magao", "launch", "taoru", "GET", "GET_Short", "end"]
 	})
 	let time = 70 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -382,11 +382,14 @@ export function main(param: GameMainParameterObject): void {
 			const koreanObj: FishObj = { asset: "korean", name: "韓国", point: 200 }
 			const launchObj: FishObj = { asset: "launch", name: "昼食", point: 200 }
 			const katsudonObj: FishObj = { asset: "taoru", name: "カツドン", point: 200 }
+			// 2020/01/29　追加分
+			const gozyou: FishObj = { asset: "gozyou", name: "五条", point: 200 }
+			const magao: FishObj = { asset: "magao", name: "顔", point: 200 }
 			// 令和2020年
 			const reiwa: FishObj = { asset: undefined, text: "令和2020年", name: "令和2020年", point: 2020, speed: -30 }
 
 			/** @param fishTemplate 流す魚の種類。 */
-			fishObjList = [karaokeObj, tuusinboObj, inuObj, dtObj, ayaseObj, koreanObj, launchObj, katsudonObj]
+			fishObjList = [karaokeObj, tuusinboObj, inuObj, dtObj, ayaseObj, koreanObj, launchObj, katsudonObj, gozyou, magao]
 
 			// 定期実行。setIntervalもAkashicEngineで用意されてる方を使う。これもニコ生のTSを考慮しているらしい。
 			scene.setInterval(() => {

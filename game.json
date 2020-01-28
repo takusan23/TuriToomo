@@ -168,6 +168,18 @@
 			"width": 360,
 			"height": 180,
 			"path": "image/end.png"
+		},
+		"magao": {
+			"type": "image",
+			"width": 70,
+			"height": 70,
+			"path": "image/magao.png"
+		},
+		"gozyou": {
+			"type": "image",
+			"width": 70,
+			"height": 77,
+			"path": "image/gozyou.png"
 		}
 	},
 	"environment": {
