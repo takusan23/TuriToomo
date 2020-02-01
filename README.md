@@ -11,3 +11,9 @@ npm start
 ```
 で実行できます。
 （npm startするとnpm run buildも一緒に動く）
+
+あと初回実行時には
+```
+npm install
+```
+が必要だと思います？
