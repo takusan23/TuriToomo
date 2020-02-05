@@ -10,7 +10,7 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		// このシーンで利用するアセットのIDを列挙し、シーンに通知します
 		// tslint:disable-next-line: max-line-length
-		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "n_kou", "karaoke_2", "tuusinbo", "korean", "gozyou", "magao", "launch", "taoru", "intai", "kiyomizu", "GET", "GET_Short", "end"]
+		assetIds: ["toomo", "nami", "nami_2", "nami_3", "hari", "hari_hanten", "karaoke", "bakkure_1", "doutei_toomo", "inu", "n_kou", "karaoke_2", "tuusinbo", "korean", "gozyou", "magao", "launch", "taoru", "intai", "kiyomizu", "GET", "GET_Short", "end", "result"]
 	})
 	let time = 70 // 制限時間
 	if (param.sessionParameter.totalTimeLimit) {
@@ -35,6 +35,15 @@ export function main(param: GameMainParameterObject): void {
 	let isGameEndImgShow = false
 	/** @param wave 波の画像 */
 	let wave: g.Sprite
+	/** 釣った魚のInterface。TypeScriptの独自要素 */
+	interface GetFishObj {
+		/** 魚の名前 */
+		name: string
+		/** 魚のポイント */
+		point: number
+	}
+	/** @param playAllGetFishList ゲームをプレイ中に釣った魚の配列。 */
+	const playAllGetFishList: GetFishObj[] = []
 
 	/**
 	 * この関数はタイトル用のSceneを生成します。
@@ -358,6 +367,9 @@ export function main(param: GameMainParameterObject): void {
 												scoreLabel.text = `点数: ${g.game.vars.gameState.score}`
 												scoreLabel.invalidate()
 											}
+											// 釣った魚を配列に入れて最後に表示
+											const getFish: GetFishObj = { name: (fish.tag as FishTag).name, point: (fish.tag as FishTag).point }
+											playAllGetFishList.push(getFish)
 										}
 									})
 								}
@@ -500,15 +512,96 @@ export function main(param: GameMainParameterObject): void {
 				if (time <= 5) {
 					// しゅーりょー
 					if (!isGameEndImgShow) {
+						// 終了画面。釣った結果を表示させる
 						const endImg = new g.Sprite({
 							scene: scene,
-							src: scene.assets["end"]
+							src: scene.assets["result"]
 						})
 						endImg.y = (g.game.height - endImg.height) / 2
 						endImg.x = (g.game.width - endImg.width) / 2
 						endImg.modified()
 						scene.append(endImg)
 						isGameEndImgShow = true
+						// 釣った結果ラベル
+						const resultLabel_1 = new al.Label({
+							scene: scene,
+							text: "",
+							fontSize: 20,
+							font: font,
+							textColor: "black",
+							width: 500,
+							x: 80,
+							y: 60
+						})
+						scene.append(resultLabel_1)
+						const resultLabel_2 = new al.Label({
+							scene: scene,
+							text: "",
+							fontSize: 20,
+							font: font,
+							textColor: "black",
+							width: 500,
+							x: (g.game.width / 2),
+							y: 60
+						})
+						scene.append(resultLabel_2)
+						// 点数表示
+						interface PointObj {
+							name: string
+							point: number
+						}
+						const pointObjList: PointObj[] = []
+						playAllGetFishList.forEach(getFish => {
+							const name = getFish.name
+							const point = getFish.point
+							// pointObjListで同じのをまとめるので、同じものがあればここに配列の位置が入る
+							let pointObjIndex = -1
+							pointObjList.forEach(pointObj => {
+								if (pointObj.name === name) {
+									// あった。
+									pointObjIndex = pointObjList.indexOf(pointObj)
+								}
+							})
+							if (pointObjIndex === -1) {
+								// なかった
+								const pointObj: PointObj = {
+									name: name,
+									point: point
+								}
+								// 追加する
+								pointObjList.push(pointObj)
+							} else {
+								// あったら加算
+								pointObjList[pointObjIndex].point += point
+							}
+						})
+						// 点数の高い順に並べる
+						pointObjList.sort((a, b) => {
+							if (a.point > b.point) return -1
+							if (a.point < b.point) return 1
+							return 0
+						})
+						// 表示
+						let resultText_1 = "" // 一列目
+						let resultText_2 = "" // 二列目
+						let writeLine = 0 // 何行目まで行ったかどうか
+						pointObjList.forEach(pointObj => {
+							const name = pointObj.name
+							const point = pointObj.point
+							writeLine++
+							// 次の行へ行くかどうか
+							if (writeLine > 10) {
+								// 二行目
+								resultText_2 = `${resultText_2}\n${name} : ${point}点`
+								resultLabel_2.text = resultText_2
+								resultLabel_2.invalidate()
+							} else {
+								// 一行目。１０行まで書ける
+								resultText_1 = `${resultText_1}\n${name} : ${point}点`
+								resultLabel_1.text = resultText_1
+								resultLabel_1.invalidate()
+							}
+						})
 					}
 					// 波消す
 					if (typeof wave !== "undefined") {
@@ -575,5 +668,3 @@ export function main(param: GameMainParameterObject): void {
 
 	}
 }
-
-
